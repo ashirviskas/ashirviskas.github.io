@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crabers Game</title>
+</head>
+<body>
+    <h1>Welcome to Crabers Game</h1>
+    <script>
+        async function loadWasm() {
+            try {
+                const response = await fetch('crabers_bg.wasm');
+                const buffer = await response.arrayBuffer();
+                const module = await WebAssembly.compile(buffer);
+                const instance = await WebAssembly.instantiate(module);
+                // instance.exports.your_exported_function(); // Call an exported function from your wasm
+
+                // Example: If you have a function named `startGame` exported from wasm, you can call it like this:
+                // instance.exports.startGame();
+
+            } catch (err) {
+                console.error('Loading Wasm failed:', err);
+            }
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>
