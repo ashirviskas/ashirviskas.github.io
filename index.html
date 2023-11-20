@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crabers Game</title>
+</head>
+<body>
+    <script>
+        async function loadWasm() {
+            try {
+                const response = await fetch('crabers.wasm');
+                const buffer = await response.arrayBuffer();
+                const module = await WebAssembly.compile(buffer);
+                const instance = await WebAssembly.instantiate(module);
+                // instance.exports.your_exported_function(); // Call an exported function
+            } catch (err) {
+                console.error('Loading Wasm failed:', err);
+            }
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>
