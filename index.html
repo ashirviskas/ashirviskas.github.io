@@ -1,40 +1,216 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Crabers Game</title>
+    <title>Minemizer</title>
     <style>
-        /* Optional: Ensure the canvas fills the window */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Landing Page */
+        #landing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        #landing h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #6cf, #a6f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        #landing .subtitle {
+            color: #888;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .menu-btn {
+            padding: 20px 32px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .btn-benchmarks {
+            background: linear-gradient(135deg, #2d5a27 0%, #1e3d1a 100%);
+            color: white;
+        }
+        .btn-benchmarks:hover {
+            background: linear-gradient(135deg, #3d7a37 0%, #2e5d2a 100%);
+        }
+
+        .btn-game {
+            background: linear-gradient(135deg, #444 0%, #333 100%);
+            color: #999;
+        }
+        .btn-game:hover {
+            background: linear-gradient(135deg, #555 0%, #444 100%);
+        }
+        .btn-game .status {
+            font-size: 0.75rem;
+            background: #c9302c;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        /* Content Views */
+        .view {
+            display: none;
+            width: 100%;
+            height: 100vh;
+        }
+        .view.active {
+            display: block;
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: 1px solid #555;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(0,0,0,0.8);
+            border-color: #888;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #game-view {
+            display: none;
+            flex-direction: column;
+        }
+        #game-view.active {
+            display: flex;
+        }
+        #game-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         canvas {
             width: 100%;
             height: 100%;
-            display: block; /* Removes extra space below the canvas */
+            display: block;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to Crabers Game</h1>
-    <script type="module">
-        import init from './crabers.js';
+    <!-- Landing Page -->
+    <div id="landing" class="view active">
+        <h1>Minemizer</h1>
+        <p class="subtitle">LLM Token Optimization Tools</p>
+
+        <div class="menu">
+            <button class="menu-btn btn-benchmarks" onclick="showView('benchmarks')">
+                <span>📊</span>
+                <span>View Benchmarks</span>
+            </button>
+
+            <button class="menu-btn btn-game" onclick="showView('game')">
+                <span>🦀</span>
+                <span>Crabers Simulation</span>
+                <span class="status">borked</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Benchmarks View -->
+    <div id="benchmarks" class="view">
+        <button class="back-btn" onclick="showView('landing')">← Back</button>
+        <iframe id="benchmark-frame" data-src="https://cdn.jsdelivr.net/gh/ashirviskas/minemizer@main/benchmarks/results/benchmark_tokens.html"></iframe>
+    </div>
+
+    <!-- Game View -->
+    <div id="game" class="view">
+        <button class="back-btn" onclick="showView('landing')">← Back</button>
+        <div id="game-container"></div>
+    </div>
+
+    <script>
+        let wasmLoaded = false;
+
+        function showView(name) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+
+            // Lazy load benchmark iframe
+            if (name === 'benchmarks') {
+                const iframe = document.getElementById('benchmark-frame');
+                if (iframe.dataset.src) {
+                    iframe.src = iframe.dataset.src;
+                    delete iframe.dataset.src;
+                }
+            }
+
+            // Load game on first visit
+            if (name === 'game' && !wasmLoaded) {
+                loadWasm();
+            }
+        }
 
         async function loadWasm() {
             try {
+                const { default: init } = await import('./crabers.js');
                 await init('./crabers_bg.wasm');
-                // The game should start as part of the WebAssembly module's initialization
+                wasmLoaded = true;
             } catch (err) {
                 console.error('Loading Wasm failed:', err);
             }
         }
+
         function resizeCanvas() {
             const canvas = document.getElementsByTagName("canvas")[0];
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            canvas.style.width = window.innerWidth + "px";
-            canvas.style.height = window.innerHeight + "px";
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                canvas.style.width = window.innerWidth + "px";
+                canvas.style.height = window.innerHeight + "px";
+            }
         }
 
         window.addEventListener('resize', resizeCanvas);
-        loadWasm();
-        
     </script>
 </body>
 </html>
