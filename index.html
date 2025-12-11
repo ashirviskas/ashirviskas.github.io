@@ -190,7 +190,7 @@
 
         async function loadBenchmark() {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/ashirviskas/minemizer/refs/heads/main/benchmarks/results/benchmark_tokens.html');
+                const response = await fetch('https://raw.githubusercontent.com/ashirviskas/minemizer/main/benchmarks/results/full_report.html');
                 const html = await response.text();
                 const iframe = document.getElementById('benchmark-frame');
                 iframe.srcdoc = html;
